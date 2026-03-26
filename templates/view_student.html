@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ student.name }} – Vision Academy{% endblock %}
+{% block page_title %}Student Profile{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>{{ student.name }}</h2>
+  <div style="display:flex;gap:.5rem;">
+    <a href="{{ url_for('edit_student', sid=student.id) }}" class="btn-primary"><i class="fas fa-edit"></i> Edit</a>
+    <a href="{{ url_for('students') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+  </div>
+</div>
+
+<div class="profile-grid">
+  <div class="profile-card">
+    <div class="profile-avatar">{{ student.name[0].upper() }}</div>
+    <h3>{{ student.name }}</h3>
+    <span class="badge-std large">Std {{ student.standard }}</span>
+    <div class="profile-details">
+      <div class="pd-row"><span>Roll No</span><strong>{{ student.roll_no }}</strong></div>
+      <div class="pd-row"><span>Medium</span><strong>{{ student.medium }}</strong></div>
+      {% if student.stream %}<div class="pd-row"><span>Stream</span><strong>{{ student.stream }}</strong></div>{% endif %}
+      <div class="pd-row"><span>Parent</span><strong>{{ student.parent_name or '—' }}</strong></div>
+      <div class="pd-row"><span>Contact</span><strong>{{ student.contact or '—' }}</strong></div>
+      <div class="pd-row"><span>Email</span><strong>{{ student.email or '—' }}</strong></div>
+      <div class="pd-row"><span>Admitted</span><strong>{{ student.admission_date.strftime('%d %b %Y') }}</strong></div>
+      {% if student.address %}<div class="pd-row"><span>Address</span><strong>{{ student.address }}</strong></div>{% endif %}
+    </div>
+  </div>
+
+  <div class="profile-right">
+    <!-- Homework -->
+    <div class="table-card">
+      <div class="card-header-row">
+        <h3><i class="fas fa-book-open"></i> Homework ({{ homeworks|length }})</h3>
+        <a href="{{ url_for('add_homework') }}" class="btn-sm-add"><i class="fas fa-plus"></i></a>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Subject</th><th>Title</th><th>Due</th><th>Status</th><th>Grade</th></tr></thead>
+          <tbody>
+            {% for hw in homeworks %}
+            <tr>
+              <td>{{ hw.subject }}</td>
+              <td>{{ hw.title }}</td>
+              <td>{{ hw.due_date.strftime('%d %b') }}</td>
+              <td><span class="status-badge {{ hw.status.lower() }}">{{ hw.status }}</span></td>
+              <td>{{ hw.grade or '—' }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="empty-cell">No homework records.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="table-card" style="margin-top:1rem;">
+      <div class="card-header-row">
+        <h3><i class="fas fa-chart-bar"></i> Test Results ({{ results|length }})</h3>
+        <a href="{{ url_for('add_result') }}" class="btn-sm-add"><i class="fas fa-plus"></i></a>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead><tr><th>Test</th><th>Subject</th><th>Date</th><th>Marks</th><th>Grade</th></tr></thead>
+          <tbody>
+            {% for r, t in results %}
+            <tr>
+              <td>{{ t.title }}</td>
+              <td>{{ t.subject }}</td>
+              <td>{{ t.test_date.strftime('%d %b') }}</td>
+              <td>{{ r.marks_obtained }}/{{ t.total_marks }}</td>
+              <td><span class="grade-badge {{ r.grade }}">{{ r.grade }}</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="empty-cell">No results yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

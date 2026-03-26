@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – Vision Academy{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>Overview</h2>
+  <span class="page-date" id="live-date"></span>
+</div>
+
+<!-- STAT CARDS -->
+<div class="stats-grid">
+  <div class="stat-card blue">
+    <div class="stat-icon"><i class="fas fa-users"></i></div>
+    <div class="stat-info">
+      <span class="stat-num">{{ total_students }}</span>
+      <span class="stat-label">Total Students</span>
+    </div>
+    <a href="{{ url_for('students') }}" class="stat-link">View All <i class="fas fa-arrow-right"></i></a>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+    <div class="stat-info">
+      <span class="stat-num">{{ total_tests }}</span>
+      <span class="stat-label">Scheduled Tests</span>
+    </div>
+    <a href="{{ url_for('tests') }}" class="stat-link">View All <i class="fas fa-arrow-right"></i></a>
+  </div>
+  <div class="stat-card orange">
+    <div class="stat-icon"><i class="fas fa-book-open"></i></div>
+    <div class="stat-info">
+      <span class="stat-num">{{ pending_hw }}</span>
+      <span class="stat-label">Pending Homework</span>
+    </div>
+    <a href="{{ url_for('homework') }}" class="stat-link">View All <i class="fas fa-arrow-right"></i></a>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-icon"><i class="fas fa-chart-bar"></i></div>
+    <div class="stat-info">
+      <span class="stat-num">{{ total_results }}</span>
+      <span class="stat-label">Results Recorded</span>
+    </div>
+    <a href="{{ url_for('results') }}" class="stat-link">View All <i class="fas fa-arrow-right"></i></a>
+  </div>
+</div>
+
+<!-- CHARTS ROW -->
+<div class="charts-row">
+  <div class="chart-card large">
+    <div class="chart-header">
+      <h3><i class="fas fa-chart-bar"></i> Students by Standard</h3>
+    </div>
+    <div class="chart-body"><canvas id="stdChart"></canvas></div>
+  </div>
+  <div class="chart-card small">
+    <div class="chart-header">
+      <h3><i class="fas fa-circle-notch"></i> Homework Status</h3>
+    </div>
+    <div class="chart-body doughnut-wrap"><canvas id="hwChart"></canvas></div>
+    <div class="doughnut-legend">
+      <span class="dl-item"><span class="dl-dot" style="background:#f59e0b"></span>Pending</span>
+      <span class="dl-item"><span class="dl-dot" style="background:#3b82f6"></span>Submitted</span>
+      <span class="dl-item"><span class="dl-dot" style="background:#10b981"></span>Graded</span>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM ROW -->
+<div class="bottom-row">
+  <div class="table-card">
+    <div class="card-header-row">
+      <h3><i class="fas fa-user-plus"></i> Recent Students</h3>
+      <a href="{{ url_for('add_student') }}" class="btn-sm-add"><i class="fas fa-plus"></i> Add</a>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Roll No</th><th>Standard</th><th>Contact</th></tr></thead>
+        <tbody>
+          {% for s in recent_students %}
+          <tr>
+            <td><a href="{{ url_for('view_student', sid=s.id) }}">{{ s.name }}</a></td>
+            <td>{{ s.roll_no }}</td>
+            <td><span class="badge-std">Std {{ s.standard }}</span></td>
+            <td>{{ s.contact or '—' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="empty-cell">No students yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="card-header-row">
+      <h3><i class="fas fa-calendar-alt"></i> Upcoming Tests</h3>
+      <a href="{{ url_for('add_test') }}" class="btn-sm-add"><i class="fas fa-plus"></i> Add</a>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th>Test</th><th>Subject</th><th>Std</th><th>Date</th></tr></thead>
+        <tbody>
+          {% for t in upcoming_tests %}
+          <tr>
+            <td>{{ t.title }}</td>
+            <td>{{ t.subject }}</td>
+            <td><span class="badge-std">{{ t.standard }}</span></td>
+            <td>{{ t.test_date.strftime('%d %b') }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="empty-cell">No upcoming tests.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // live date
+  const d = new Date();
+  document.getElementById('live-date').textContent = d.toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  // bar chart
+  const stdLabels = {{ standards|safe }};
+  const stdData   = {{ std_counts|safe }};
+  new Chart(document.getElementById('stdChart'), {
+    type: 'bar',
+    data: {
+      labels: stdLabels,
+      datasets: [{
+        label: 'Students',
+        data: stdData,
+        backgroundColor: 'rgba(59,130,246,0.7)',
+        borderColor: '#3b82f6',
+        borderWidth: 2,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: { mode: 'index' }},
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' }},
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', stepSize: 1 }, beginAtZero: true }
+      }
+    }
+  });
+
+  // doughnut
+  const hwData = {{ hw_data|safe }};
+  new Chart(document.getElementById('hwChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Pending','Submitted','Graded'],
+      datasets: [{
+        data: hwData,
+        backgroundColor: ['#f59e0b','#3b82f6','#10b981'],
+        borderColor: '#0f172a',
+        borderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '70%',
+      plugins: { legend: { display: false }}
+    }
+  });
+</script>
+{% endblock %}

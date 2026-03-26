@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Results – Vision Academy{% endblock %}
+{% block page_title %}Results{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>Test Results</h2>
+  <a href="{{ url_for('add_result') }}" class="btn-primary"><i class="fas fa-plus"></i> Add Result</a>
+</div>
+
+<div class="filter-bar">
+  <form method="GET" class="filter-form">
+    <div class="search-box"><i class="fas fa-search"></i>
+      <input type="text" name="q" placeholder="Search student name, roll no, test…" value="{{ q }}"/></div>
+    <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Search</button>
+    <a href="{{ url_for('results') }}" class="btn-clear">Clear</a>
+  </form>
+</div>
+
+<div class="table-card">
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>Student</th><th>Test</th><th>Subject</th><th>Marks</th><th>%</th><th>Grade</th><th>Remarks</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for r, s, t in results %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td><a href="{{ url_for('view_student', sid=s.id) }}">{{ s.name }}</a><br><small>{{ s.roll_no }}</small></td>
+          <td>{{ t.title }}</td>
+          <td>{{ t.subject }}</td>
+          <td>{{ r.marks_obtained }}/{{ t.total_marks }}</td>
+          <td>{{ "%.1f"|format(r.marks_obtained/t.total_marks*100) }}%</td>
+          <td><span class="grade-badge {{ r.grade }}">{{ r.grade }}</span></td>
+          <td>{{ r.remarks or '—' }}</td>
+          <td class="action-btns">
+            <form method="POST" action="{{ url_for('delete_result', rid=r.id) }}" style="display:inline"
+                  onsubmit="return confirm('Delete this result?')">
+              <button class="btn-icon red" title="Delete"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="empty-cell">No results found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="table-footer">{{ results|length }} record(s)</div>
+</div>
+{% endblock %}

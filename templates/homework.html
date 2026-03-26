@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Homework – Vision Academy{% endblock %}
+{% block page_title %}Homework{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>Homework Management</h2>
+  <a href="{{ url_for('add_homework') }}" class="btn-primary"><i class="fas fa-plus"></i> Assign Homework</a>
+</div>
+
+<div class="filter-bar">
+  <form method="GET" class="filter-form">
+    <div class="search-box"><i class="fas fa-search"></i>
+      <input type="text" name="q" placeholder="Search title or subject…" value="{{ q }}"/></div>
+    <select name="status" class="filter-select">
+      <option value="">All Status</option>
+      <option value="Pending" {% if status_filter=='Pending' %}selected{% endif %}>Pending</option>
+      <option value="Submitted" {% if status_filter=='Submitted' %}selected{% endif %}>Submitted</option>
+      <option value="Graded" {% if status_filter=='Graded' %}selected{% endif %}>Graded</option>
+    </select>
+    <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Filter</button>
+    <a href="{{ url_for('homework') }}" class="btn-clear">Clear</a>
+  </form>
+</div>
+
+<div class="table-card">
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>Student</th><th>Subject</th><th>Title</th><th>Due Date</th><th>Status</th><th>Grade</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for hw in homeworks %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ hw.student.name }}</td>
+          <td>{{ hw.subject }}</td>
+          <td>{{ hw.title }}</td>
+          <td>{{ hw.due_date.strftime('%d %b %Y') }}</td>
+          <td><span class="status-badge {{ hw.status.lower() }}">{{ hw.status }}</span></td>
+          <td>{{ hw.grade or '—' }}</td>
+          <td class="action-btns">
+            <button class="btn-icon blue" onclick="openHwModal({{ hw.id }},'{{ hw.status }}','{{ hw.grade or '' }}')" title="Update"><i class="fas fa-edit"></i></button>
+            <form method="POST" action="{{ url_for('delete_homework', hid=hw.id) }}" style="display:inline"
+                  onsubmit="return confirm('Delete this homework?')">
+              <button class="btn-icon red" title="Delete"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="empty-cell">No homework records found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="table-footer">{{ homeworks|length }} record(s)</div>
+</div>
+
+<!-- Update Modal -->
+<div class="modal-overlay" id="hwModal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-header"><h3>Update Homework</h3><button onclick="closeHwModal()">×</button></div>
+    <form method="POST" id="hwForm">
+      <div class="form-group">
+        <label>Status</label>
+        <select name="status" id="hwStatus">
+          <option value="Pending">Pending</option>
+          <option value="Submitted">Submitted</option>
+          <option value="Graded">Graded</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Grade</label>
+        <input type="text" name="grade" id="hwGrade" placeholder="e.g. A, B+"/>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Update</button>
+        <button type="button" class="btn-secondary" onclick="closeHwModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function openHwModal(id, status, grade){
+  document.getElementById('hwModal').style.display='flex';
+  document.getElementById('hwForm').action='/homework/update/'+id;
+  document.getElementById('hwStatus').value=status;
+  document.getElementById('hwGrade').value=grade;
+}
+function closeHwModal(){ document.getElementById('hwModal').style.display='none'; }
+</script>
+{% endblock %}

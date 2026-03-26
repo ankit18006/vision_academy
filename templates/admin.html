@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel – Vision Academy{% endblock %}
+{% block page_title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>System Administration</h2>
+  <span class="badge-admin"><i class="fas fa-shield-alt"></i> Admin Access</span>
+</div>
+
+<!-- ADMIN STATS -->
+<div class="stats-grid">
+  <div class="stat-card blue"><div class="stat-icon"><i class="fas fa-users"></i></div>
+    <div class="stat-info"><span class="stat-num">{{ total_students }}</span><span class="stat-label">Students</span></div></div>
+  <div class="stat-card green"><div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+    <div class="stat-info"><span class="stat-num">{{ total_tests }}</span><span class="stat-label">Tests</span></div></div>
+  <div class="stat-card orange"><div class="stat-icon"><i class="fas fa-book-open"></i></div>
+    <div class="stat-info"><span class="stat-num">{{ total_hw }}</span><span class="stat-label">Homeworks</span></div></div>
+  <div class="stat-card red"><div class="stat-icon"><i class="fas fa-chart-bar"></i></div>
+    <div class="stat-info"><span class="stat-num">{{ total_results }}</span><span class="stat-label">Results</span></div></div>
+</div>
+
+<!-- MONTHLY ADMISSIONS CHART -->
+<div class="chart-card full-width">
+  <div class="chart-header">
+    <h3><i class="fas fa-chart-line"></i> Monthly Admissions (Last 6 Months)</h3>
+  </div>
+  <div class="chart-body"><canvas id="monthChart"></canvas></div>
+</div>
+
+<!-- USERS TABLE -->
+<div class="table-card" style="margin-top:1.5rem;">
+  <div class="card-header-row">
+    <h3><i class="fas fa-user-cog"></i> System Users ({{ users|length }})</h3>
+  </div>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td><strong>{{ u.name }}</strong>{% if u.id == current_user.id %} <span class="badge-you">You</span>{% endif %}</td>
+          <td>{{ u.email }}</td>
+          <td><span class="role-badge {{ u.role }}">{{ u.role.title() }}</span></td>
+          <td>{{ u.created_at.strftime('%d %b %Y') }}</td>
+          <td class="action-btns">
+            {% if u.id != current_user.id %}
+            <form method="POST" action="{{ url_for('toggle_role', uid=u.id) }}" style="display:inline">
+              <button class="btn-icon blue" title="Toggle Role"><i class="fas fa-exchange-alt"></i></button>
+            </form>
+            <form method="POST" action="{{ url_for('delete_user', uid=u.id) }}" style="display:inline"
+                  onsubmit="return confirm('Delete user {{ u.name }}?')">
+              <button class="btn-icon red" title="Delete User"><i class="fas fa-trash"></i></button>
+            </form>
+            {% else %}
+            <span class="muted-text">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const mLabels = {{ months_labels|safe }};
+  const mData   = {{ months_data|safe }};
+  new Chart(document.getElementById('monthChart'), {
+    type: 'line',
+    data: {
+      labels: mLabels,
+      datasets: [{
+        label: 'New Admissions',
+        data: mData,
+        backgroundColor: 'rgba(59,130,246,0.15)',
+        borderColor: '#3b82f6',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#3b82f6',
+        pointRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#94a3b8' }}},
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' }},
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', stepSize: 1 }, beginAtZero: true }
+      }
+    }
+  });
+</script>
+{% endblock %}

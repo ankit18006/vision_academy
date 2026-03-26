@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Tests – Vision Academy{% endblock %}
+{% block page_title %}Tests{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h2>Test Schedule</h2>
+  <a href="{{ url_for('add_test') }}" class="btn-primary"><i class="fas fa-plus"></i> Schedule Test</a>
+</div>
+
+<div class="filter-bar">
+  <form method="GET" class="filter-form">
+    <div class="search-box"><i class="fas fa-search"></i>
+      <input type="text" name="q" placeholder="Search test or subject…" value="{{ q }}"/></div>
+    <button type="submit" class="btn-filter"><i class="fas fa-filter"></i> Search</button>
+    <a href="{{ url_for('tests') }}" class="btn-clear">Clear</a>
+  </form>
+</div>
+
+<div class="table-card">
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>Title</th><th>Subject</th><th>Standard</th><th>Date</th><th>Total Marks</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for t in tests %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td><strong>{{ t.title }}</strong></td>
+          <td>{{ t.subject }}</td>
+          <td><span class="badge-std">{{ t.standard }}</span></td>
+          <td>{{ t.test_date.strftime('%d %b %Y') }}</td>
+          <td>{{ t.total_marks }}</td>
+          <td>
+            {% if t.test_date >= today %}
+              <span class="status-badge pending">Upcoming</span>
+            {% else %}
+              <span class="status-badge graded">Completed</span>
+            {% endif %}
+          </td>
+          <td class="action-btns">
+            <form method="POST" action="{{ url_for('delete_test', tid=t.id) }}" style="display:inline"
+                  onsubmit="return confirm('Delete test: {{ t.title }}?')">
+              <button class="btn-icon red" title="Delete"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="empty-cell">No tests scheduled.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="table-footer">{{ tests|length }} record(s)</div>
+</div>
+{% endblock %}
